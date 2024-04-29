@@ -1,0 +1,131 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity MultiplierDivider_TB is
+end entity MultiplierDivider_TB;
+
+architecture Structural of MultiplierDivider_TB is
+    signal multiplicand, divisor : std_logic_vector(63 downto 0);
+    signal control_signals_mul, control_signals_div : std_logic_vector(5 downto 0);
+    signal quotient, remainder : std_logic_vector(63 downto 0);
+    signal clk : std_logic := '1'; -- Clock signal
+    constant CLK_PERIOD : time := 10 ns; -- Clock period
+
+    -- Instantiate clock generator
+    component ClockGenerator
+        port (
+            clk : out std_logic;
+            period : in time
+        );
+    end component;
+
+    -- Instantiate Multiplexer for providing different input values
+    component Mux2to1
+        generic (
+            WIDTH : integer := 64
+        );
+        port (
+            sel : in std_logic;
+            a, b : in std_logic_vector(WIDTH-1 downto 0);
+            y : out std_logic_vector(WIDTH-1 downto 0)
+        );
+    end component;
+
+    -- Instantiate MultiplierDivider module for multiplication
+    component MultiplierDivider
+        port (
+            multiplicand, divisor : in std_logic_vector(63 downto 0);
+            control_signals : in std_logic_vector(5 downto 0);
+            quotient, remainder : out std_logic_vector(63 downto 0)
+        );
+    end component;
+
+begin
+    -- Clock generator instantiation
+    ClockGenerator_inst: ClockGenerator
+        port map (
+            clk => clk,
+            period => CLK_PERIOD
+        );
+
+    -- Instantiate Multiplexer for selecting input values for multiplication
+    Mux_inst_mul: Mux2to1
+        generic map (
+            WIDTH => 64
+        )
+        port map (
+            sel => '0', -- Select input A for multiplication
+            a => X"FFFFFFFFFFFFFFFF",
+            b => X"0000000000000001",
+            y => multiplicand
+        );
+
+    -- Instantiate Multiplexer for selecting input values for division
+    Mux_inst_div: Mux2to1
+        generic map (
+            WIDTH => 64
+        )
+        port map (
+            sel => '1', -- Select input B for division
+            a => X"FFFFFFFFFFFFFFFF",
+            b => X"0000000000000002",
+            y => divisor
+        );
+
+    -- Control signals for multiplication
+    control_signals_mul <= "000000";
+
+    -- Control signals for division
+    control_signals_div <= "000001";
+
+    -- Instantiate MultiplierDivider module for multiplication
+    MultiplierDivider_inst_mul: MultiplierDivider
+        port map (
+            multiplicand => multiplicand,
+            divisor => divisor,
+            control_signals => control_signals_mul,
+            quotient => quotient,
+            remainder => remainder
+        );
+
+    -- Instantiate MultiplierDivider module for division
+    MultiplierDivider_inst_div: MultiplierDivider
+        port map (
+            multiplicand => multiplicand,
+            divisor => divisor,
+            control_signals => control_signals_div,
+            quotient => quotient,
+            remainder => remainder
+        );
+
+    -- Clock process
+    clk_process: process
+    begin
+        while now < 1000 ns loop -- Extend simulation time to accommodate 100 inputs
+            clk <= not clk;
+            wait for CLK_PERIOD / 2;
+        end loop;
+        wait;
+    end process clk_process;
+
+    -- Test process for multiplication
+    test_process_mul: process
+    begin
+        for i in 0 to 99 loop -- 100 multiplication operations
+            control_signals_mul <= "000000";
+            wait for CLK_PERIOD * 10; -- Wait for one clock cycle
+        end loop;
+        wait;
+    end process test_process_mul;
+
+    -- Test process for division
+    test_process_div: process
+    begin
+        for i in 0 to 99 loop -- 100 division operations
+            control_signals_div <= "000001";
+            wait for CLK_PERIOD * 10; -- Wait for one clock cycle
+        end loop;
+        wait;
+    end process test_process_div;
+
+end architecture Structural;
