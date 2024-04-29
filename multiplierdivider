@@ -1,0 +1,67 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity MultiplierDivider is
+    port (
+        multiplicand, divisor : in std_logic_vector(63 downto 0);
+        control_signals : in std_logic_vector(5 downto 0);
+        quotient, remainder : out std_logic_vector(63 downto 0)
+    );
+end entity MultiplierDivider;
+
+architecture Structural of MultiplierDivider is
+    signal product, temp_remainder : std_logic_vector(127 downto 0);
+    signal control_test : std_logic_vector(5 downto 0);
+begin
+    -- Multiplication
+    ALU_inst_mul: entity work.ALU_64bit
+        port map (
+            A => multiplicand,
+            B => divisor,
+            opcode => "010", -- Multiplication opcode
+            result => product(127 downto 64), -- Width of "result" adjusted to match width of "product"
+            overflow => open
+        );
+
+    Shift_inst_mul: entity work.ShiftOperations
+        port map (
+            data_in => product,
+            shift_right => '1',
+            shift_amount => (others => '0'),
+            data_out => temp_remainder
+        );
+
+    ProductReg_inst: entity work.ProductRemainderRegister
+        port map (
+            data_in => temp_remainder,
+            write_enable => control_test(2),
+            data_out => temp_remainder
+        );
+
+    -- Division
+    ALU_inst_div: entity work.ALU_64bit
+        port map (
+            A => temp_remainder(127 downto 64),
+            B => divisor,
+            opcode => "001", -- Subtraction opcode
+            result => temp_remainder(127 downto 64), -- Width of "result" adjusted to match width of "temp_remainder"
+            overflow => open
+        );
+
+    Shift_inst_div: entity work.ShiftOperations
+        port map (
+            data_in => temp_remainder,
+            shift_right => '0',
+            shift_amount => (others => '0'),
+            data_out => temp_remainder
+        );
+
+    ControlLogic_inst: entity work.ControlLogic
+        port map (
+            operation => control_signals(1 downto 0),
+            control_signals => control_test
+        );
+
+    quotient <= product(127 downto 64);
+    remainder <= temp_remainder(63 downto 0);
+end architecture Structural;
