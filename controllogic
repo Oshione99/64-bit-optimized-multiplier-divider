@@ -1,0 +1,24 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity ControlLogic is
+    port (
+        operation : in std_logic_vector(1 downto 0);
+        control_signals : out std_logic_vector(5 downto 0)
+    );
+end entity ControlLogic;
+
+architecture Structural of ControlLogic is
+begin
+    process(operation)
+    begin
+        case operation is
+            when "00" => -- Multiplication
+                control_signals <= "001010";
+            when "01" => -- Division
+                control_signals <= "000101";
+            when others => -- Other operations (not supported in this design)
+                control_signals <= "000000";
+        end case;
+    end process;
+end architecture Structural;
