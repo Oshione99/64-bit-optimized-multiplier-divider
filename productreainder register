@@ -1,0 +1,20 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity ProductRemainderRegister is
+    port (
+        data_in : in std_logic_vector(127 downto 0);
+        write_enable : in std_logic;
+        data_out : out std_logic_vector(127 downto 0)
+    );
+end entity ProductRemainderRegister;
+
+architecture Structural of ProductRemainderRegister is
+begin
+    process(data_in, write_enable)
+    begin
+        if write_enable = '1' then
+            data_out <= data_in;
+        end if;
+    end process;
+end architecture Structural;
