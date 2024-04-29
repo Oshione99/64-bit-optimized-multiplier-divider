@@ -1,0 +1,30 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity ALU_64bit is
+    port (
+        A, B : in std_logic_vector(63 downto 0);
+        opcode : in std_logic_vector(2 downto 0);
+        result : out std_logic_vector(63 downto 0);
+        overflow : out std_logic
+    );
+end entity ALU_64bit;
+
+architecture Structural of ALU_64bit is
+begin
+    -- Implementing only addition and subtraction for overflow detection
+    process(A, B, opcode)
+    begin
+        case opcode is
+            when "000" => -- Addition
+                result <= A + B;
+            when "001" => -- Subtraction
+                result <= A - B;
+            when others => -- Unsupported operation
+                result <= (others => '0');
+        end case;
+        overflow <= '0'; -- Overflow not implemented for simplicity
+    end process;
+end architecture Structural;
